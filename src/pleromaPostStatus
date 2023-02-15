@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -e
+
+# ref: https://gist.github.com/okapies/eab5c6fc217e914ed0cac6c944384e4d
+
+usage() {
+cat <<EOF
+usage: $(basename "$0") -h hostName -t accessToken [-v visibility] "status you want to post."
+EOF
+}
+
+if test -z "$1"; then
+  usage
+  exit 0
+fi
+
+while getopts h:t:v: OPT; do
+  case $OPT in
+    h) host="${OPTARG}" ;;
+    t) token="${OPTARG}" ;;
+    v) visibility="${OPTARG}" ;;
+    *) echo error: invalid option "$OPT" 1>&2
+       usage
+       exit 1
+       ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+if [ -z "$host" ]; then
+  echo error: Host name is needed. 1>&2
+  usage
+  exit 1
+fi
+
+if [ -z "$token" ]; then
+  echo error: Access token is needed. 1>&2
+  usage
+  exit 1
+fi
+
+# visibilities: public, private, unlisted
+visibilityOption=""
+if [ -n "$visibility" ]; then
+  visibilityOption="-d visibility=${visibility}"
+fi
+
+# shellcheck disable=SC2086
+res=$(curl -X POST -d "status=$1" $visibilityOption --header "Authorization: Bearer ${token}" -Ss "https://${host}/api/v1/statuses")
+
+error=$(echo "$res" | jq -r '.error')
+
+if [ "$error" != "null" ]; then
+  echo error: "${error}" 1>&2
+  exit 1
+fi

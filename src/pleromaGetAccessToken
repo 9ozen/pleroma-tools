@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -e
+
+# ref: https://gist.github.com/okapies/eab5c6fc217e914ed0cac6c944384e4d
+
+echo -n "Client name? "
+read -r clientName
+
+echo -n "Scopes (e.g. read write follow)? "
+read -r scopes
+
+echo -n "Pleroma host? "
+read -r host
+
+echo -n "User name? "
+read -r user
+
+echo -n "User password? "
+read -r password
+
+res=$(curl -X POST -sS "https://${host}/api/v1/apps" \
+  -F "client_name=${clientName}" \
+  -F "redirect_uris=http://localhost" \
+  -F "scopes=${scopes}")
+
+clientID=$(echo "${res}" | jq -r '.client_id')
+clientSecret=$(echo "${res}" | jq -r '.client_secret')
+
+curl -X POST -sS "https://${host}/oauth/token" \
+  -d "client_id=${clientID}&client_secret=${clientSecret}&grant_type=password&username=${user}&password=${password}&scope=${scopes}"
