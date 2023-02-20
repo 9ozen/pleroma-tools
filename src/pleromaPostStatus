@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
-set -e
+set -eu
 
 # ref: https://gist.github.com/okapies/eab5c6fc217e914ed0cac6c944384e4d
 
 usage() {
 cat <<EOF
-usage: $(basename "$0") -h hostName -t accessToken [-v visibility] "status you want to post."
+usage: $(basename "$0") -h hostName (-t accessToken | -T accessTokenFile) [-v visibility] "status you want to post."
 EOF
 }
 
+set +u
 if test -z "$1"; then
   usage
   exit 0
 fi
+set -u
 
-while getopts h:t:v: OPT; do
+while getopts h:t:T:v: OPT; do
   case $OPT in
     h) host="${OPTARG}" ;;
     t) token="${OPTARG}" ;;
+    T) token=$(cat "${OPTARG}") ;;
     v) visibility="${OPTARG}" ;;
     *) echo error: invalid option "$OPT" 1>&2
        usage
