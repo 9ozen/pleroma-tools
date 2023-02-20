@@ -2,7 +2,8 @@
 let
   name    = "pleroma-tools";
   scripts = lib.mapAttrsToList (n: v: ./src + ("/" + n))
-              (lib.filterAttrs (n: v: v == "regular") (builtins.readDir ./src));
+              (lib.filterAttrs (n: v: v == "regular" && ! lib.hasPrefix "." n)
+                (builtins.readDir ./src));
   wrapScript = script: writeShellApplication {
     name = lib.last (builtins.split "/" (toString script));
     runtimeInputs = [ curl jq ];
